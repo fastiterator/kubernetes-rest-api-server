@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deploy
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- range $key,$value := .Values.labels }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- range $key,$value := .Values.selector_labels }}
+      {{ $key }}: {{ $value }}
+      {{- end }}
+  {{- if .Values.replica_count }}
+  replicas: {{ .Values.replica_count }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- range $key,$value := .Values.selector_labels }}
+        {{ $key }}: {{ $value }}
+        {{- end }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: {{ .Values.image }}
+        ports:
+          - containerPort : {{ .Values.containerPort }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
